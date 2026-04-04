@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z-TRONIK Code Studio</title>
+    <!-- Tailwind CSS untuk Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome untuk Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Library JsBarcode untuk Barcode -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <!-- Library QRCode untuk QR Code -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <!-- Library Flatpickr untuk Date Picker Kalender -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ztronik: {
+                            light: '#10b981', // Emerald 500
+                            DEFAULT: '#059669', // Emerald 600
+                            dark: '#047857', // Emerald 700
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-green-50 via-emerald-100 to-green-200 min-h-screen flex flex-col text-slate-800 font-sans selection:bg-ztronik selection:text-white relative overflow-x-hidden">
+
+    <!-- Background Ornamen Biar Berwarna -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-green-400/40 blur-3xl"></div>
+        <div class="absolute top-[20%] -right-[10%] w-[50%] h-[50%] rounded-full bg-emerald-400/40 blur-3xl"></div>
+        <div class="absolute -bottom-[10%] left-[20%] w-[60%] h-[60%] rounded-full bg-lime-300/40 blur-3xl"></div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-8">
+        <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl shadow-green-900/10 border border-white p-6 sm:p-10 w-full max-w-lg transition-all duration-300 relative z-10">
+            
+            <!-- Judul & Keterangan Menyatu di Sini -->
+            <div class="text-center mb-8 border-b border-green-100 pb-6">
+                <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600 tracking-tight drop-shadow-sm mb-2">
+                    <i class="fa-solid fa-qrcode mr-2 text-green-600"></i>Z-TRONIK Code Studio
+                </h1>
+                <p class="text-sm text-slate-500 font-medium">Generator Barcode & QR Code Profesional</p>
+            </div>
+
+            <!-- Form Input -->
+            <div class="space-y-5">
+                
+                <!-- Dropdown Pilihan -->
+                <div>
+                    <label for="typeSelect" class="block text-sm font-semibold text-slate-700 mb-2">Jenis Kode</label>
+                    <div class="relative">
+                        <select id="typeSelect" class="block w-full appearance-none bg-slate-50 border border-slate-300 text-slate-700 py-3 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-ztronik focus:border-ztronik transition-colors cursor-pointer font-medium">
+                            <option value="barcode-bpjs" selected>Barcode BPJS Kesehatan</option>
+                            <option value="qr-npwp">QR Code NPWP 16 Digit</option>
+                            <option value="qr-bpjs-tk">QR Code BPJS Ketenagakerjaan</option>
+                            <option value="qr-ak1">QR Code AK1 Kab. Tangerang</option>
+                            <option value="barcode-umum">Barcode Umum (Bebas)</option>
+                            <option value="qr-umum">QR Code Umum (Bebas)</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                            <i class="fa-solid fa-chevron-down text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Teks -->
+                <div>
+                    <label id="inputLabel" for="dataInput" class="block text-sm font-semibold text-slate-700 mb-2">Masukkan Nomor Peserta (Wajib 13 Digit)</label>
+                    <input type="text" id="dataInput" maxlength="13" placeholder="Contoh: 0001234567890" class="block w-full bg-slate-50 border border-slate-300 text-slate-900 py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-ztronik focus:border-ztronik transition-colors placeholder:text-slate-400" autocomplete="off">
+                </div>
+
+                <!-- Input Tanggal (Khusus AK1, Awalnya Disembunyikan) -->
+                <div id="dateInputContainer" class="hidden animate-[fadeIn_0.3s_ease-out]">
+                    <label for="dateInput" class="block text-sm font-semibold text-slate-700 mb-2">Tanggal Pendaftaran (Pilih Kalender atau Ketik Manual)</label>
+                    <div class="relative">
+                        <div id="calendarIcon" class="absolute inset-y-0 left-0 pl-4 flex items-center cursor-pointer group z-10" title="Buka Kalender">
+                            <i class="fa-solid fa-calendar-day text-emerald-500 group-hover:text-emerald-700 transition-colors text-lg"></i>
+                        </div>
+                        <input type="text" id="dateInput" placeholder="DD/MM/YYYY" maxlength="10" class="block w-full pl-12 bg-slate-50 border border-slate-300 text-slate-900 py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-ztronik focus:border-ztronik transition-colors placeholder:text-slate-400" autocomplete="off">
+                    </div>
+                </div>
+
+                <!-- Pesan Error -->
+                <div id="errorMessage" class="hidden bg-red-50 text-red-600 text-sm py-2 px-3 rounded-md border border-red-200 flex items-center">
+                    <i class="fa-solid fa-circle-exclamation mr-2"></i>
+                    <span id="errorText">Ups! Isi datanya dulu ya.</span>
+                </div>
+
+                <!-- Tombol Generate -->
+                <button onclick="generateCode()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all duration-300 flex justify-center items-center group active:scale-[0.98]">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-2 group-hover:scale-125 transition-transform"></i> Generate Kode
+                </button>
+
+            </div>
+
+            <!-- Area Preview (Awalnya Disembunyikan) -->
+            <div id="previewArea" class="hidden mt-8 pt-8 border-t border-slate-200 flex-col items-center animate-[fadeIn_0.5s_ease-out]">
+                <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Hasil Preview</h3>
+                
+                <!-- Container Canvas -->
+                <div class="bg-white p-4 rounded-xl border-2 border-dashed border-slate-300 shadow-sm flex justify-center items-center min-h-[150px] min-w-[200px] mb-6 relative group overflow-hidden">
+                    <canvas id="canvasOutput" class="max-w-full h-auto object-contain"></canvas>
+                </div>
+
+                <!-- Tombol Download -->
+                <div class="flex flex-col sm:flex-row w-full gap-3">
+                    <button onclick="downloadCode('png')" class="flex-1 bg-white border-2 border-slate-200 hover:border-ztronik hover:text-ztronik text-slate-700 font-semibold py-2.5 px-4 rounded-lg transition-colors flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-image"></i> Unduh PNG
+                    </button>
+                    <button onclick="downloadCode('jpeg')" class="flex-1 bg-white border-2 border-slate-200 hover:border-ztronik hover:text-ztronik text-slate-700 font-semibold py-2.5 px-4 rounded-lg transition-colors flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-file-image"></i> Unduh JPG
+                    </button>
+                </div>
+
+                <!-- Output Tanggal Khusus AK1 -->
+                <div id="dateOutputArea" class="hidden mt-6 w-full bg-emerald-50 border border-emerald-200 rounded-xl p-4 shadow-inner">
+                    <h4 class="text-sm font-bold text-emerald-800 mb-3 border-b border-emerald-200 pb-2">
+                        <i class="fa-solid fa-clock-rotate-left mr-2"></i>Jadwal Lapor Ulang (Per 180 Hari)
+                    </h4>
+                    <div class="flex flex-col gap-3 text-sm text-emerald-700 font-medium">
+                        <div class="bg-white px-4 py-2.5 rounded-lg shadow-sm border border-emerald-100 flex justify-between items-center group hover:border-emerald-300 transition-colors">
+                            <span>Masa berlaku:</span> 
+                            <div class="flex items-center gap-3">
+                                <span id="lapor4" class="font-bold text-emerald-900"></span>
+                                <button onclick="copyDate('lapor4')" class="text-slate-400 hover:text-emerald-600 transition-colors focus:outline-none" title="Salin Tanggal">
+                                    <i id="icon-lapor4" class="fa-regular fa-copy text-base"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-white px-4 py-2.5 rounded-lg shadow-sm border border-emerald-100 flex justify-between items-center group hover:border-emerald-300 transition-colors">
+                            <span>Lapor 1:</span> 
+                            <div class="flex items-center gap-3">
+                                <span id="lapor1" class="font-bold text-emerald-900"></span>
+                                <button onclick="copyDate('lapor1')" class="text-slate-400 hover:text-emerald-600 transition-colors focus:outline-none" title="Salin Tanggal">
+                                    <i id="icon-lapor1" class="fa-regular fa-copy text-base"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-white px-4 py-2.5 rounded-lg shadow-sm border border-emerald-100 flex justify-between items-center group hover:border-emerald-300 transition-colors">
+                            <span>Lapor 2:</span> 
+                            <div class="flex items-center gap-3">
+                                <span id="lapor2" class="font-bold text-emerald-900"></span>
+                                <button onclick="copyDate('lapor2')" class="text-slate-400 hover:text-emerald-600 transition-colors focus:outline-none" title="Salin Tanggal">
+                                    <i id="icon-lapor2" class="fa-regular fa-copy text-base"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-white px-4 py-2.5 rounded-lg shadow-sm border border-emerald-100 flex justify-between items-center group hover:border-emerald-300 transition-colors">
+                            <span>Lapor 3:</span> 
+                            <div class="flex items-center gap-3">
+                                <span id="lapor3" class="font-bold text-emerald-900"></span>
+                                <button onclick="copyDate('lapor3')" class="text-slate-400 hover:text-emerald-600 transition-colors focus:outline-none" title="Salin Tanggal">
+                                    <i id="icon-lapor3" class="fa-regular fa-copy text-base"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white/70 backdrop-blur-md border-t border-white py-6 mt-auto relative z-10">
+        <div class="max-w-4xl mx-auto px-6 flex flex-col items-center justify-center text-center">
+            <p class="text-slate-600 text-sm font-medium">
+                &copy; <span id="currentYear"></span> <span class="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600 font-extrabold">Z-TRONIK</span>. All rights reserved.
+            </p>
+            <p class="text-slate-500 text-xs mt-1.5 font-medium leading-relaxed">
+                Aplikasi Barcode & QR Generator dengan teknologi terkini. Dikembangkan oleh <span class="font-bold text-green-600">Z-TRONIK</span>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Custom Style & Script -->
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom styling buat Flatpickr biar nyatu sama tema Z-TRONIK */
+        .flatpickr-calendar {
+            font-family: inherit;
+            border: 1px solid #d1fae5 !important; /* emerald-100 */
+            box-shadow: 0 10px 15px -3px rgba(4, 120, 87, 0.1), 0 4px 6px -2px rgba(4, 120, 87, 0.05) !important;
+            border-radius: 0.75rem !important;
+        }
+        .flatpickr-day.selected {
+            background: #059669 !important; /* emerald-600 */
+            border-color: #059669 !important;
+        }
+    </style>
+
+    <script>
+        // Set tahun otomatis di footer
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // Inisialisasi Flatpickr (Kalender)
+        const datePicker = flatpickr("#dateInput", {
+            dateFormat: "d/m/Y",
+            allowInput: true, // Biar admin tetep bisa ngetik manual kalo mau
+            locale: "id", // Pake bahasa Indonesia
+            disableMobile: "true" // Biar tampilan tetep pop-up cakep di HP
+        });
+
+        // Buka kalender pas icon kalender diklik
+        document.getElementById('calendarIcon').addEventListener('click', function() {
+            datePicker.open();
+        });
+
+        // Fitur Generate
+        function generateCode() {
+            const type = document.getElementById('typeSelect').value;
+            const data = document.getElementById('dataInput').value.trim();
+            const dateInput = document.getElementById('dateInput').value.trim();
+            const canvas = document.getElementById('canvasOutput');
+            const previewArea = document.getElementById('previewArea');
+            const dateOutputArea = document.getElementById('dateOutputArea');
+            const errorMsg = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+
+            // Reset Output Tanggal
+            dateOutputArea.classList.add('hidden');
+
+            // Validasi Input Kosong
+            if (!data) {
+                errorText.textContent = "Bro, kolom datanya jangan dikosongin ya!";
+                errorMsg.classList.remove('hidden');
+                previewArea.classList.add('hidden');
+                return;
+            }
+
+            // Validasi Panjang Karakter Pas Generate
+            if (type === 'barcode-bpjs' && data.length !== 13) {
+                errorText.textContent = "Waduh, Nomor BPJS Kesehatan wajib pas 13 digit angka ya, Bro!";
+                errorMsg.classList.remove('hidden');
+                previewArea.classList.add('hidden');
+                return;
+            }
+
+            if ((type === 'qr-npwp' || type === 'qr-bpjs-tk') && data.length !== 16) {
+                errorText.textContent = "Bro, NIK wajib pas 16 digit angka ya, nggak boleh kurang atau lebih!";
+                errorMsg.classList.remove('hidden');
+                previewArea.classList.add('hidden');
+                return;
+            }
+
+            if (type === 'qr-ak1' && data.length !== 18) {
+                errorText.textContent = "Waduh, Nomor AK1 wajib pas 18 karakter (huruf/angka) ya, Bro!";
+                errorMsg.classList.remove('hidden');
+                previewArea.classList.add('hidden');
+                return;
+            }
+
+            // Validasi Input Tanggal Khusus AK1
+            if (type === 'qr-ak1') {
+                if (dateInput.length !== 10) {
+                    errorText.textContent = "Bro, Tanggal Pendaftarannya diisi lengkap ya! (Format: DD/MM/YYYY)";
+                    errorMsg.classList.remove('hidden');
+                    previewArea.classList.add('hidden');
+                    return;
+                }
+            }
+
+            // Sembunyikan error jika ada
+            errorMsg.classList.add('hidden');
+
+            // Reset Canvas
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            try {
+                if (type.startsWith('barcode')) {
+                    // Generate Barcode untuk BPJS dan Umum (Code 128)
+                    JsBarcode(canvas, data, {
+                        format: "CODE128",
+                        background: "#ffffff",
+                        lineColor: "#1e293b", // slate-800
+                        width: 2.5,
+                        height: 120,
+                        displayValue: false, // Sembunyikan teks untuk semua jenis barcode
+                        fontSize: 18,
+                        fontOptions: "bold",
+                        font: "sans-serif",
+                        textMargin: 8,
+                        margin: 15
+                    });
+                    previewArea.classList.remove('hidden');
+
+                } else {
+                    // Siapkan data untuk QR Code
+                    let qrData = data;
+                    
+                    // Format khusus untuk AK1 Kab. Tangerang
+                    if (type === 'qr-ak1') {
+                        // Pecah inputan jadi: 2 char . 2 char . 8 char . 6 char
+                        const part1 = data.substring(0, 2);
+                        const part2 = data.substring(2, 4);
+                        const part3 = data.substring(4, 12);
+                        const part4 = data.substring(12, 18);
+                        const formattedNomor = `${part1}.${part2}.${part3}.${part4}`;
+                        
+                        // Gabungkan dengan URL API
+                        qrData = `https://api.siapkerja.tangerangkab.go.id/api/verify/ak1/${formattedNomor}`;
+                        
+                        // Hitung Tanggal Lapor
+                        const parts = dateInput.split('/');
+                        const day = parseInt(parts[0], 10);
+                        const month = parseInt(parts[1], 10) - 1; // Bulan di JS mulai dari 0
+                        const year = parseInt(parts[2], 10);
+                        const baseDate = new Date(year, month, day);
+
+                        const addDays = (date, days) => {
+                            const result = new Date(date);
+                            result.setDate(result.getDate() + days);
+                            return result;
+                        };
+
+                        const formatDateToID = (date) => {
+                            const d = String(date.getDate()).padStart(2, '0');
+                            const m = String(date.getMonth() + 1).padStart(2, '0');
+                            const y = date.getFullYear();
+                            return `${d}/${m}/${y}`;
+                        };
+
+                        const lapor1 = addDays(baseDate, 180);
+                        const lapor2 = addDays(lapor1, 180);
+                        const lapor3 = addDays(lapor2, 180);
+                        const lapor4 = addDays(lapor3, 180);
+
+                        document.getElementById('lapor1').textContent = formatDateToID(lapor1);
+                        document.getElementById('lapor2').textContent = formatDateToID(lapor2);
+                        document.getElementById('lapor3').textContent = formatDateToID(lapor3);
+                        document.getElementById('lapor4').textContent = formatDateToID(lapor4);
+                        
+                        // Tampilkan kotak tanggalnya
+                        dateOutputArea.classList.remove('hidden');
+                    } 
+                    // Format khusus untuk BPJS Ketenagakerjaan
+                    else if (type === 'qr-bpjs-tk') {
+                        // Encode NIK ke format Base64 (Simulasi Enkripsi)
+                        // Kita tambahin teks dikit biar panjangnya mirip sama contoh BPJS
+                        const base64String = btoa("BPJSTK_ZTRONIK_" + data); 
+                        // Pastikan format akhirnya ada == nya biar kelihatan pro
+                        const fakeToken = base64String.replace(/=/g, '') + "==";
+                        
+                        qrData = `http://bpjstk.id/kpj/profile/${fakeToken}/Cek Profile Peserta BPJS Ketenagakerjaan`;
+                    }
+
+                    // Generate QR Code
+                    QRCode.toCanvas(canvas, qrData, {
+                        width: 280,
+                        margin: 2,
+                        color: {
+                            dark: "#1e293b", // slate-800
+                            light: "#ffffff"
+                        }
+                    }, function (error) {
+                        if (error) {
+                            console.error(error);
+                            showError("Wah, gagal bikin QR Codenya. Coba cek format datanya.");
+                        } else {
+                            previewArea.classList.remove('hidden');
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                showError("Gagal memproses data. Pastikan format teks sudah benar.");
+            }
+        }
+
+        // Tampilkan Error Custom
+        function showError(msg) {
+            const errorMsg = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const previewArea = document.getElementById('previewArea');
+            
+            errorText.textContent = msg;
+            errorMsg.classList.remove('hidden');
+            previewArea.classList.add('hidden');
+        }
+
+        // Fitur Download Canvas
+        function downloadCode(format) {
+            const canvas = document.getElementById('canvasOutput');
+            const typeSelect = document.getElementById('typeSelect');
+            const typeText = typeSelect.options[typeSelect.selectedIndex].text.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const dataInput = document.getElementById('dataInput').value.trim().substring(0, 10); // Ambil maks 10 char pertama
+            
+            // Bikin canvas sementara biar background putihnya aman buat JPG
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const ctx = tempCanvas.getContext('2d');
+            
+            // Isi background putih
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            // Gambar kode di atas background putih
+            ctx.drawImage(canvas, 0, 0);
+
+            // Bikin URL data
+            const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+            const url = tempCanvas.toDataURL(mimeType, 1.0);
+
+            // Trigger Download
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Z-TRONIK_${typeText}_${dataInput}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Fitur Copy Tanggal Khusus AK1
+        function copyDate(elementId) {
+            const dateText = document.getElementById(elementId).textContent;
+            if (!dateText) return;
+
+            // Bikin textarea sementara buat nyalin teks (support semua browser)
+            const textArea = document.createElement("textarea");
+            textArea.value = dateText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                // Ubah icon jadi centang ijo bentar sebagai tanda berhasil
+                const icon = document.getElementById('icon-' + elementId);
+                icon.className = 'fa-solid fa-check text-emerald-500 scale-125 transition-all duration-200';
+                
+                // Balikin ke icon semula setelah 1.5 detik
+                setTimeout(() => {
+                    icon.className = 'fa-regular fa-copy transition-all duration-200';
+                }, 1500);
+            } catch (err) {
+                console.error('Waduh, gagal nge-copy bro: ', err);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // Memicu tombol generate kalau user pencet 'Enter' di kolom input
+        document.getElementById('dataInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                generateCode();
+            }
+        });
+
+        // Filter Input Real-time: Paksa format sesuai jenis kode
+        document.getElementById('dataInput').addEventListener('input', function(e) {
+            const type = document.getElementById('typeSelect').value;
+            if (type === 'barcode-bpjs' || type === 'qr-npwp' || type === 'qr-bpjs-tk') {
+                this.value = this.value.replace(/[^0-9]/g, ''); // Langsung hapus kalau ada huruf/simbol
+            } else if (type === 'qr-ak1') {
+                this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase(); // Hanya huruf & angka, otomatis kapital
+            }
+        });
+
+        // Filter Input Real-time untuk Tanggal (Auto Format DD/MM/YYYY)
+        document.getElementById('dateInput').addEventListener('input', function(e) {
+            let v = this.value.replace(/\D/g, ''); // Hapus semua karakter non-angka
+            if (v.length > 8) v = v.substring(0, 8); // Maksimal 8 digit angka murni
+            
+            let formatted = v;
+            if (v.length > 4) {
+                // Udah ngetik tahun (DD/MM/YYYY)
+                formatted = v.substring(0, 2) + '/' + v.substring(2, 4) + '/' + v.substring(4, 8);
+            } else if (v.length > 2) {
+                // Udah ngetik bulan (DD/MM)
+                formatted = v.substring(0, 2) + '/' + v.substring(2, 4);
+            }
+            this.value = formatted;
+        });
+        
+        // Sembunyikan preview jika tipe diganti, sekaligus ubah label text, placeholder & batasan input
+        document.getElementById('typeSelect').addEventListener('change', function() {
+            document.getElementById('previewArea').classList.add('hidden');
+            document.getElementById('dateOutputArea').classList.add('hidden'); // Sembunyikan jadwal
+            document.getElementById('errorMessage').classList.add('hidden'); // Sembunyiin error sebelumnya
+            
+            const type = this.value;
+            const label = document.getElementById('inputLabel');
+            const input = document.getElementById('dataInput');
+            const dateContainer = document.getElementById('dateInputContainer');
+            
+            // Hapus limit dan kosongin input biar rapi
+            input.removeAttribute('maxlength');
+            input.value = '';
+            document.getElementById('dateInput').value = '';
+            
+            if (type === 'barcode-bpjs') {
+                label.textContent = "Masukkan Nomor Peserta (Wajib 13 Digit)";
+                input.placeholder = "Contoh: 0001234567890";
+                input.setAttribute('maxlength', '13');
+                dateContainer.classList.add('hidden');
+            } else if (type === 'qr-npwp' || type === 'qr-bpjs-tk') {
+                label.textContent = "Masukkan NIK (Wajib 16 Digit)";
+                input.placeholder = "Contoh: 3604000000000000";
+                input.setAttribute('maxlength', '16'); // Limit di 16 karakter
+                dateContainer.classList.add('hidden'); // Sembunyikan kolom tanggal di sini!
+            } else if (type === 'qr-ak1') {
+                label.textContent = "Masukkan Nomor Pendaftaran (Wajib 18 Karakter)";
+                input.placeholder = "Contoh: 3603GANKJNXS202604";
+                input.setAttribute('maxlength', '18');
+                dateContainer.classList.remove('hidden'); // Munculin kolom tanggal buat AK1
+            } else if (type === 'barcode-umum') {
+                label.textContent = "Data Barcode Bebas (Bisa Huruf/Angka)";
+                input.placeholder = "Ketik teks atau angka untuk barcode...";
+                dateContainer.classList.add('hidden');
+            } else if (type === 'qr-umum') {
+                label.textContent = "Data QR Code Bebas (Bisa Link/Teks)";
+                input.placeholder = "Ketik link website, teks, atau angka...";
+                dateContainer.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
